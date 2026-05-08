@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lyrical Vocal Master</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #060810;
+    --surface: rgba(255,255,255,0.04);
+    --surface2: rgba(255,255,255,0.08);
+    --border: rgba(255,255,255,0.10);
+    --border2: rgba(255,255,255,0.18);
+    --text: #e8eaf6;
+    --muted: rgba(232,234,246,0.45);
+    --accent: #a78bfa;
+    --accent2: #f472b6;
+    --accent3: #34d399;
+    --gold: #fbbf24;
+    --red: #f87171;
+    --glow-purple: rgba(167,139,250,0.18);
+    --glow-pink: rgba(244,114,182,0.14);
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 10%, var(--glow-purple), transparent),
+      radial-gradient(ellipse 50% 40% at 80% 80%, var(--glow-pink), transparent),
+      radial-gradient(ellipse 30% 30% at 50% 50%, rgba(52,211,153,0.06), transparent);
+    pointer-events: none; z-index: 0;
+  }
+
+  #app { position: relative; z-index: 1; min-height: 100vh; }
+
+  /* ─── SCREENS ─── */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ─── SHARED ─── */
+  .glass {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+  }
+  .glass2 {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    backdrop-filter: blur(24px);
+    border-radius: 16px;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 14px 28px;
+    border: none; border-radius: 12px;
+    font-family: var(--font-body); font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: all .2s;
+    letter-spacing: .3px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    box-shadow: 0 4px 24px rgba(167,139,250,.35);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(167,139,250,.5); }
+  .btn-secondary {
+    background: var(--surface2); border: 1px solid var(--border2); color: var(--text);
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,.12); }
+  .btn-danger {
+    background: rgba(248,113,113,.15); border: 1px solid rgba(248,113,113,.3); color: var(--red);
+  }
+  .btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
+
+  /* ─── TOPBAR ─── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { font-family: var(--font-display); font-size: 28px; letter-spacing: 2px; color: var(--accent); }
+  .xp-badge {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    padding: 8px 16px; border-radius: 40px;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--gold);
+  }
+  .xp-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); animation: pulse-gold 2s infinite; }
+  @keyframes pulse-gold { 0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,.6)} 50%{box-shadow:0 0 0 6px rgba(251,191,36,0)} }
+
+  /* ─── INPUT SCREEN ─── */
+  #screen-input { align-items: center; justify-content: center; padding: 24px; }
+  .input-card { width: 100%; max-width: 680px; padding: 40px; }
+  .input-card h1 { font-family: var(--font-display); font-size: 52px; letter-spacing: 3px; line-height: 1;
+    background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .input-card p { color: var(--muted); margin: 10px 0 28px; font-size: 15px; }
+  label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  textarea {
+    width: 100%; min-height: 180px; resize: vertical;
+    background: rgba(255,255,255,.04); border: 1px solid var(--border2);
+    border-radius: 12px; padding: 16px; color: var(--text); font-family: var(--font-body); font-size: 15px;
+    outline: none; transition: border-color .2s;
+  }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); }
+  select {
+    width: 100%; padding: 12px 16px; margin-top: 0;
+    background: rgba(255,255,255,.04); border: 1px solid var(--border2);
+    border-radius: 12px; color: var(--text); font-family: var(--font-body); font-size: 14px;
+    outline: none; cursor: pointer; appearance: none;
+  }
+  select option { background: #0f1020; }
+  .row { display: flex; gap: 16px; margin: 16px 0; flex-wrap: wrap; }
+  .row > * { flex: 1; min-width: 200px; }
+  .unsupported-msg {
+    display: none; padding: 14px 18px; border-radius: 12px;
+    background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.3); color: var(--red);
+    font-size: 14px; margin-top: 16px;
+  }
+
+  /* ─── ANALYSIS SCREEN ─── */
+  #screen-analysis { align-items: center; justify-content: center; gap: 24px; }
+  .analysis-icon { font-size: 64px; animation: spin-slow 3s linear infinite; display: block; }
+  @keyframes spin-slow { to { transform: rotate(360deg); } }
+  .analysis-bar-wrap { width: 280px; height: 6px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+  .analysis-bar { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 99px; transition: width .4s; }
+  .analysis-txt { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+
+  /* ─── LEVEL MAP ─── */
+  #screen-map { flex-direction: column; }
+  .map-header { padding: 0 28px 24px; }
+  .map-header h2 { font-family: var(--font-display); font-size: 36px; letter-spacing: 2px; }
+  .map-header p { color: var(--muted); font-size: 14px; }
+  .map-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px; padding: 0 28px 40px; overflow-y: auto; flex: 1;
+  }
+  .level-card {
+    aspect-ratio: 1; border-radius: 20px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 8px; cursor: pointer;
+    transition: all .25s; position: relative; overflow: hidden;
+  }
+  .level-card.locked {
+    background: rgba(255,255,255,.03); border: 1px solid var(--border);
+    cursor: not-allowed; opacity: .5;
+  }
+  .level-card.unlocked {
+    background: var(--surface2); border: 1px solid var(--border2);
+  }
+  .level-card.unlocked:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 8px 32px var(--glow-purple); }
+  .level-card.completed {
+    background: linear-gradient(135deg, rgba(167,139,250,.15), rgba(244,114,182,.12));
+    border: 1px solid rgba(167,139,250,.4);
+  }
+  .level-card.completed:hover { transform: translateY(-4px); box-shadow: 0 8px 32px rgba(167,139,250,.3); }
+  .level-num { font-family: var(--font-display); font-size: 40px; color: var(--text); }
+  .level-stars { font-size: 18px; letter-spacing: 2px; }
+  .level-lock { font-size: 28px; color: var(--muted); }
+  .level-card .level-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .map-footer { padding: 16px 28px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
+
+  /* ─── PLAY SCREEN ─── */
+  #screen-play { flex-direction: column; }
+  .play-topbar { padding: 20px 28px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid var(--border); }
+  .play-title { font-family: var(--font-display); font-size: 26px; letter-spacing: 2px; flex: 1; }
+  .play-progress { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+  .play-body { flex: 1; padding: 32px 28px; display: flex; flex-direction: column; gap: 24px; overflow-y: auto; }
+  .line-block { padding: 24px 28px; border-radius: 16px; }
+  .line-block.active-line { background: var(--surface2); border: 1px solid var(--border2); }
+  .line-block.done-line { opacity: .6; }
+  .line-label { font-size: 11px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .words-row { display: flex; flex-wrap: wrap; gap: 6px 10px; }
+  .word {
+    font-size: clamp(18px, 3vw, 26px); font-weight: 500;
+    color: rgba(232,234,246,.35); transition: all .2s;
+    border-bottom: 2px solid transparent; padding-bottom: 2px;
+    cursor: default;
+  }
+  .word.matched {
+    color: var(--accent3);
+    border-bottom-color: var(--accent3);
+    transform: scale(1.08);
+    text-shadow: 0 0 16px rgba(52,211,153,.5);
+  }
+  .word.interim {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+  .word.missed { color: var(--red); border-bottom-color: var(--red); }
+
+  .mic-area { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 8px 0; }
+  .mic-btn {
+    width: 80px; height: 80px; border-radius: 50%; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    box-shadow: 0 4px 24px rgba(167,139,250,.4);
+    transition: all .2s; position: relative;
+  }
+  .mic-btn:hover { transform: scale(1.08); }
+  .mic-btn.listening { animation: mic-pulse 1.5s ease-in-out infinite; }
+  .mic-btn.listening::after {
+    content: ''; position: absolute; inset: -6px; border-radius: 50%;
+    border: 2px solid var(--accent); animation: mic-ring 1.5s ease-out infinite;
+  }
+  @keyframes mic-pulse { 0%,100%{box-shadow:0 4px 24px rgba(167,139,250,.4)} 50%{box-shadow:0 4px 40px rgba(167,139,250,.8)} }
+  @keyframes mic-ring { 0%{transform:scale(1);opacity:1} 100%{transform:scale(1.5);opacity:0} }
+  .mic-status { font-family: var(--font-mono); font-size: 12px; color: var(--muted); letter-spacing: 1px; }
+  .mic-status.listening-txt { color: var(--accent3); }
+
+  .interim-display {
+    min-height: 40px; padding: 10px 18px; border-radius: 10px;
+    background: rgba(251,191,36,.06); border: 1px solid rgba(251,191,36,.2);
+    font-family: var(--font-mono); font-size: 13px; color: var(--gold);
+    width: 100%; max-width: 500px; text-align: center; word-break: break-word;
+  }
+
+  .line-score {
+    font-family: var(--font-mono); font-size: 13px;
+    padding: 6px 14px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    display: inline-block; margin-top: 10px;
+  }
+  .line-score.high { color: var(--accent3); border-color: rgba(52,211,153,.3); }
+  .line-score.med { color: var(--gold); border-color: rgba(251,191,36,.3); }
+  .line-score.low { color: var(--red); border-color: rgba(248,113,113,.3); }
+
+  .play-footer { padding: 16px 28px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+
+  /* ─── RESULTS SCREEN ─── */
+  #screen-results { align-items: center; justify-content: center; padding: 24px; }
+  .results-card { width: 100%; max-width: 480px; padding: 44px 40px; text-align: center; }
+  .results-stars { font-size: 52px; letter-spacing: 6px; margin-bottom: 8px; animation: stars-pop .5s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes stars-pop { 0%{transform:scale(0) rotate(-20deg);opacity:0} 100%{transform:scale(1) rotate(0);opacity:1} }
+  .results-level { font-family: var(--font-display); font-size: 44px; letter-spacing: 3px; margin-bottom: 4px; }
+  .results-subtitle { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
+  .results-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+  .stat-box { background: var(--surface2); border: 1px solid var(--border2); border-radius: 14px; padding: 18px 12px; }
+  .stat-val { font-family: var(--font-display); font-size: 38px; letter-spacing: 2px; }
+  .stat-val.green { color: var(--accent3); }
+  .stat-val.purple { color: var(--accent); }
+  .stat-val.gold { color: var(--gold); }
+  .stat-lbl { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+  .results-btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 99px; }
+
+  /* ─── ANIMATIONS ─── */
+  .fade-in { animation: fadeIn .4s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 600px) {
+    .topbar { padding: 16px 18px; }
+    .map-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); padding: 0 18px 32px; }
+    .play-body { padding: 20px 18px; }
+    .play-footer { flex-wrap: wrap; }
+    .input-card { padding: 28px 20px; }
+    .results-card { padding: 32px 20px; }
+    .results-stats { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══════════════ INPUT SCREEN ═══════════════ -->
+  <section id="screen-input" class="screen active">
+    <div class="input-card glass fade-in">
+      <h1>LYRICAL<br>VOCAL MASTER</h1>
+      <p>Memorize lyrics, poems & speeches — step by step, word by word.</p>
+
+      <div id="unsupported-msg" class="unsupported-msg">
+        ⚠️ Your browser doesn't support the Web Speech API. Please use Google Chrome or Microsoft Edge for the best experience.
+      </div>
+
+      <div style="margin-bottom:16px">
+        <label for="lyrics-input">Paste Your Lyrics / Text</label>
+        <textarea id="lyrics-input" placeholder="Paste your song lyrics, poem, or speech here...&#10;&#10;Each line will become part of a level.&#10;Empty lines are ignored."></textarea>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="lang-select">Recognition Language</label>
+          <select id="lang-select">
+            <option value="en-US">🇺🇸 English (US)</option>
+            <option value="en-GB">🇬🇧 English (UK)</option>
+            <option value="bn-BD">🇧🇩 Bengali (Bangladesh)</option>
+            <option value="bn-IN">🇮🇳 Bengali (India)</option>
+            <option value="es-ES">🇪🇸 Spanish</option>
+            <option value="hi-IN">🇮🇳 Hindi</option>
+            <option value="fr-FR">🇫🇷 French</option>
+            <option value="de-DE">🇩🇪 German</option>
+            <option value="ar-SA">🇸🇦 Arabic</option>
+            <option value="zh-CN">🇨🇳 Chinese (Simplified)</option>
+            <option value="ja-JP">🇯🇵 Japanese</option>
+            <option value="ko-KR">🇰🇷 Korean</option>
+            <option value="pt-BR">🇧🇷 Portuguese (Brazil)</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:flex-end">
+          <button class="btn btn-primary" id="btn-start" style="width:100%">Generate Levels →</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ ANALYSIS SCREEN ═══════════════ -->
+  <section id="screen-analysis" class="screen">
+    <span class="analysis-icon">🎵</span>
+    <div class="analysis-bar-wrap">
+      <div class="analysis-bar" id="analysis-bar"></div>
+    </div>
+    <p class="analysis-txt" id="analysis-txt">Parsing lyrics...</p>
+  </section>
+
+  <!-- ═══════════════ LEVEL MAP ═══════════════ -->
+  <section id="screen-map" class="screen">
+    <div class="topbar">
+      <span class="logo">LVM</span>
+      <div style="display:flex;gap:12px;align-items:center">
+        <div class="xp-badge"><div class="xp-dot"></div><span id="xp-display">0 XP</span></div>
+        <button class="btn btn-secondary" id="btn-new-song" style="padding:8px 16px;font-size:13px">↩ New</button>
+      </div>
+    </div>
+    <div class="map-header" style="padding:24px 28px 16px">
+      <h2>LEVEL MAP</h2>
+      <p id="map-subtitle">Select a level to begin</p>
+    </div>
+    <div class="map-grid" id="map-grid"></div>
+  </section>
+
+  <!-- ═══════════════ PLAY SCREEN ═══════════════ -->
+  <section id="screen-play" class="screen">
+    <div class="play-topbar">
+      <button class="btn btn-secondary" id="btn-back-to-map" style="padding:8px 16px;font-size:13px">← Map</button>
+      <span class="play-title" id="play-level-title">LEVEL 1</span>
+      <span class="play-progress" id="play-progress">Line 1 / 2</span>
+      <div class="xp-badge"><div class="xp-dot"></div><span id="play-xp-display">0 XP</span></div>
+    </div>
+
+    <div class="play-body" id="play-body"></div>
+
+    <div class="play-footer">
+      <div class="mic-area" style="flex:1;gap:12px">
+        <div class="interim-display" id="interim-display">— tap mic to start listening —</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+          <button class="mic-btn" id="mic-btn" title="Toggle microphone">🎤</button>
+          <span class="mic-status" id="mic-status">TAP TO LISTEN</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:140px;align-items:flex-end">
+        <button class="btn btn-primary" id="btn-check" style="width:100%">Check & Next ✓</button>
+        <button class="btn btn-danger" id="btn-skip" style="width:100%;padding:10px">Skip Line</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ RESULTS SCREEN ═══════════════ -->
+  <section id="screen-results" class="screen">
+    <div class="results-card glass fade-in">
+      <div class="results-stars" id="res-stars">⭐⭐⭐</div>
+      <div class="results-level" id="res-level">LEVEL 1</div>
+      <div class="results-subtitle" id="res-subtitle">Excellent performance!</div>
+      <div class="results-stats">
+        <div class="stat-box">
+          <div class="stat-val green" id="res-accuracy">92%</div>
+          <div class="stat-lbl">Accuracy</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val gold" id="res-xp-earned">+100 XP</div>
+          <div class="stat-lbl">XP Earned</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val purple" id="res-lines">2</div>
+          <div class="stat-lbl">Lines Done</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="res-total-xp">350</div>
+          <div class="stat-lbl">Total XP</div>
+        </div>
+      </div>
+      <div class="results-btn-row">
+        <button class="btn btn-primary" id="btn-next-level">Next Level →</button>
+        <button class="btn btn-secondary" id="btn-back-map">Level Map</button>
+        <button class="btn btn-secondary" id="btn-retry">Retry</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+const state = {
+  xp: 0,
+  language: 'en-US',
+  levels: [],           // [{lines:['...','...'], status:'locked'|'unlocked'|'completed', stars:0, score:0}]
+  currentLevel: 0,
+  currentLine: 0,
+  lineScores: [],
+  recognition: null,
+  isListening: false,
+  matchedWords: [],     // per-line: array of booleans
+  lastInterim: '',
+};
+
+// ═══════════════════════════════════════════════
+//  SCREEN HELPERS
+// ═══════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ═══════════════════════════════════════════════
+//  SPEECH RECOGNITION CHECK
+// ═══════════════════════════════════════════════
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (!SpeechRecognition) {
+  document.getElementById('unsupported-msg').style.display = 'block';
+  document.getElementById('btn-start').disabled = true;
+}
+
+// ═══════════════════════════════════════════════
+//  WORD HELPERS
+// ═══════════════════════════════════════════════
+function cleanWord(w) {
+  return w.toLowerCase().replace(/[^a-z0-9\u0080-\uFFFF]/g, '');
+}
+
+function partialMatch(spoken, target) {
+  if (!spoken || !target) return false;
+  if (spoken === target) return true;
+  if (target.startsWith(spoken) && spoken.length >= Math.max(3, target.length - 2)) return true;
+  if (spoken.startsWith(target)) return true;
+  // Levenshtein distance for short words
+  if (Math.abs(spoken.length - target.length) <= 2) {
+    let dist = levenshtein(spoken, target);
+    return dist <= 1;
+  }
+  return false;
+}
+
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m+1}, (_, i) => Array.from({length: n+1}, (_, j) => j === 0 ? i : 0));
+  for (let j = 1; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+// ═══════════════════════════════════════════════
+//  TEXT PARSING → LEVELS
+// ═══════════════════════════════════════════════
+function parseTextToLevels(raw) {
+  const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  const levels = [];
+  for (let i = 0; i < lines.length; i += 2) {
+    const chunk = lines.slice(i, i + 2);
+    levels.push({ lines: chunk, status: i === 0 ? 'unlocked' : 'locked', stars: 0, score: 0 });
+  }
+  return levels;
+}
+
+// ═══════════════════════════════════════════════
+//  INPUT SCREEN → START
+// ═══════════════════════════════════════════════
+document.getElementById('btn-start').addEventListener('click', () => {
+  const raw = document.getElementById('lyrics-input').value.trim();
+  if (!raw) { alert('Please paste some lyrics first!'); return; }
+  state.language = document.getElementById('lang-select').value;
+  startAnalysis(raw);
+});
+
+function startAnalysis(raw) {
+  showScreen('screen-analysis');
+  const bar = document.getElementById('analysis-bar');
+  const txt = document.getElementById('analysis-txt');
+  const steps = ['Parsing lyrics...', 'Tokenizing lines...', 'Building levels...', 'Almost ready...'];
+  let step = 0;
+  const interval = setInterval(() => {
+    step++;
+    bar.style.width = (step / steps.length * 100) + '%';
+    txt.textContent = steps[Math.min(step, steps.length - 1)];
+    if (step >= steps.length) {
+      clearInterval(interval);
+      setTimeout(() => {
+        state.levels = parseTextToLevels(raw);
+        state.xp = 0;
+        renderMap();
+        showScreen('screen-map');
+      }, 400);
+    }
+  }, 450);
+}
+
+// ═══════════════════════════════════════════════
+//  LEVEL MAP
+// ═══════════════════════════════════════════════
+function renderMap() {
+  const grid = document.getElementById('map-grid');
+  grid.innerHTML = '';
+  updateXpDisplays();
+  const total = state.levels.length;
+  const done = state.levels.filter(l => l.status === 'completed').length;
+  document.getElementById('map-subtitle').textContent =
+    `${done}/${total} levels completed`;
+
+  state.levels.forEach((lv, i) => {
+    const card = document.createElement('div');
+    card.className = `level-card ${lv.status}`;
+    let inner = '';
+    if (lv.status === 'locked') {
+      inner = `<div class="level-lock">🔒</div><div class="level-label">Locked</div>`;
+    } else if (lv.status === 'unlocked') {
+      inner = `<div class="level-num">${i + 1}</div><div class="level-label">Unlocked</div>`;
+    } else {
+      const stars = '⭐'.repeat(lv.stars) + '☆'.repeat(3 - lv.stars);
+      inner = `<div class="level-num">${i + 1}</div><div class="level-stars">${stars}</div><div class="level-label">${Math.round(lv.score)}%</div>`;
+    }
+    card.innerHTML = inner;
+    if (lv.status !== 'locked') {
+      card.addEventListener('click', () => startLevel(i));
+    }
+    grid.appendChild(card);
+  });
+}
+
+document.getElementById('btn-new-song').addEventListener('click', () => {
+  stopRecognition();
+  showScreen('screen-input');
+});
+
+// ═══════════════════════════════════════════════
+//  PLAY SCREEN — SETUP
+// ═══════════════════════════════════════════════
+function startLevel(levelIdx) {
+  state.currentLevel = levelIdx;
+  state.currentLine = 0;
+  state.lineScores = [];
+  document.getElementById('play-level-title').textContent = `LEVEL ${levelIdx + 1}`;
+  renderPlayScreen();
+  showScreen('screen-play');
+}
+
+function renderPlayScreen() {
+  const lv = state.levels[state.currentLevel];
+  const body = document.getElementById('play-body');
+  body.innerHTML = '';
+
+  lv.lines.forEach((line, i) => {
+    const block = document.createElement('div');
+    block.className = `line-block ${i === state.currentLine ? 'active-line glass2' : ''} ${i < state.currentLine ? 'done-line' : ''}`;
+    block.id = `line-block-${i}`;
+
+    const label = document.createElement('div');
+    label.className = 'line-label';
+    label.textContent = i < state.currentLine
+      ? `Line ${i + 1} — ${Math.round(state.lineScores[i] || 0)}% matched`
+      : `Line ${i + 1}`;
+    block.appendChild(label);
+
+    const wordsRow = document.createElement('div');
+    wordsRow.className = 'words-row';
+    wordsRow.id = `words-row-${i}`;
+
+    const words = line.split(/\s+/).filter(Boolean);
+    words.forEach((w, wi) => {
+      const span = document.createElement('span');
+      span.className = 'word';
+      span.id = `word-${i}-${wi}`;
+      span.textContent = w;
+
+      if (i < state.currentLine) {
+        // Already evaluated
+        const matched = (state.matchedWords[i] || [])[wi];
+        span.classList.add(matched ? 'matched' : 'missed');
+      }
+      wordsRow.appendChild(span);
+    });
+    block.appendChild(wordsRow);
+    body.appendChild(block);
+  });
+
+  // Initialize matchedWords for current line
+  if (!state.matchedWords[state.currentLine]) {
+    const words = lv.lines[state.currentLine].split(/\s+/).filter(Boolean);
+    state.matchedWords[state.currentLine] = new Array(words.length).fill(false);
+  }
+
+  updatePlayProgress();
+  resetMicUI();
+  stopRecognition();
+}
+
+function updatePlayProgress() {
+  const lv = state.levels[state.currentLevel];
+  document.getElementById('play-progress').textContent =
+    `Line ${state.currentLine + 1} / ${lv.lines.length}`;
+  updateXpDisplays();
+}
+
+// ═══════════════════════════════════════════════
+//  SPEECH RECOGNITION
+// ═══════════════════════════════════════════════
+document.getElementById('mic-btn').addEventListener('click', toggleMic);
+
+function toggleMic() {
+  if (state.isListening) {
+    stopRecognition();
+  } else {
+    startRecognition();
+  }
+}
+
+function startRecognition() {
+  if (!SpeechRecognition) return;
+  if (state.recognition) {
+    try { state.recognition.stop(); } catch(e) {}
+  }
+
+  const rec = new SpeechRecognition();
+  rec.continuous = true;
+  rec.interimResults = true;
+  rec.lang = state.language;
+  state.recognition = rec;
+
+  rec.onstart = () => {
+    state.isListening = true;
+    const btn = document.getElementById('mic-btn');
+    const status = document.getElementById('mic-status');
+    btn.classList.add('listening');
+    status.textContent = '● LISTENING...';
+    status.classList.add('listening-txt');
+  };
+
+  rec.onend = () => {
+    if (state.isListening) {
+      // Auto-restart if still supposed to listen
+      try { rec.start(); } catch(e) {}
+    } else {
+      resetMicUI();
+    }
+  };
+
+  rec.onerror = (e) => {
+    if (e.error !== 'aborted') {
+      state.isListening = false;
+      resetMicUI();
+    }
+  };
+
+  rec.onresult = (event) => {
+    let interim = '';
+    let final = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const t = event.results[i][0].transcript;
+      if (event.results[i].isFinal) final += t + ' ';
+      else interim += t;
+    }
+
+    state.lastInterim = interim;
+    document.getElementById('interim-display').textContent = interim || final || '...';
+
+    // Match against current line
+    const spoken = (final + ' ' + interim).trim();
+    matchSpokenToLine(spoken);
+  };
+
+  try { rec.start(); }
+  catch(e) { console.error('Speech recognition failed:', e); }
+}
+
+function stopRecognition() {
+  state.isListening = false;
+  if (state.recognition) {
+    try { state.recognition.abort(); } catch(e) {}
+    state.recognition = null;
+  }
+  resetMicUI();
+}
+
+function resetMicUI() {
+  const btn = document.getElementById('mic-btn');
+  const status = document.getElementById('mic-status');
+  if (btn) {
+    btn.classList.remove('listening');
+    status.textContent = 'TAP TO LISTEN';
+    status.classList.remove('listening-txt');
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  WORD MATCHING
+// ═══════════════════════════════════════════════
+function matchSpokenToLine(spokenText) {
+  const lv = state.levels[state.currentLevel];
+  const line = lv.lines[state.currentLine];
+  const targetWords = line.split(/\s+/).filter(Boolean);
+  const spokenWords = spokenText.split(/\s+/).filter(Boolean).map(cleanWord);
+
+  // Reset interim state on display
+  targetWords.forEach((_, wi) => {
+    const span = document.getElementById(`word-${state.currentLine}-${wi}`);
+    if (span) span.classList.remove('interim');
+  });
+
+  // Greedy matching: find best coverage
+  const matched = new Array(targetWords.length).fill(false);
+  const spokenCleaned = spokenWords.filter(Boolean);
+
+  targetWords.forEach((tw, ti) => {
+    const target = cleanWord(tw);
+    for (let si = 0; si < spokenCleaned.length; si++) {
+      if (partialMatch(spokenCleaned[si], target)) {
+        matched[ti] = true;
+        break;
+      }
+    }
+  });
+
+  state.matchedWords[state.currentLine] = matched;
+
+  // Update visual
+  targetWords.forEach((_, wi) => {
+    const span = document.getElementById(`word-${state.currentLine}-${wi}`);
+    if (!span) return;
+    span.classList.remove('matched', 'missed', 'interim');
+    if (matched[wi]) span.classList.add('matched');
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  CHECK & NEXT
+// ═══════════════════════════════════════════════
+document.getElementById('btn-check').addEventListener('click', checkAndNext);
+document.getElementById('btn-skip').addEventListener('click', skipLine);
+
+function checkAndNext() {
+  stopRecognition();
+  const lv = state.levels[state.currentLevel];
+  const line = lv.lines[state.currentLine];
+  const targetWords = line.split(/\s+/).filter(Boolean);
+  const matched = state.matchedWords[state.currentLine] || [];
+  const matchCount = matched.filter(Boolean).length;
+  const accuracy = targetWords.length > 0 ? (matchCount / targetWords.length) * 100 : 0;
+
+  // Mark missed words
+  targetWords.forEach((_, wi) => {
+    const span = document.getElementById(`word-${state.currentLine}-${wi}`);
+    if (span && !matched[wi]) span.classList.add('missed');
+  });
+
+  state.lineScores.push(accuracy);
+
+  // XP for this line
+  let xpEarned = 0;
+  if (accuracy >= 80) xpEarned = 50;
+  else if (accuracy >= 40) xpEarned = 10;
+  state.xp += xpEarned;
+
+  // Update label with score
+  const label = document.getElementById(`line-block-${state.currentLine}`)?.querySelector('.line-label');
+  if (label) label.textContent = `Line ${state.currentLine + 1} — ${Math.round(accuracy)}% matched`;
+
+  // Move to next line or finish
+  state.currentLine++;
+  if (state.currentLine >= lv.lines.length) {
+    finishLevel();
+  } else {
+    // Re-render to show next line active
+    if (!state.matchedWords[state.currentLine]) {
+      const nextWords = lv.lines[state.currentLine].split(/\s+/).filter(Boolean);
+      state.matchedWords[state.currentLine] = new Array(nextWords.length).fill(false);
+    }
+    // Update active block styling
+    document.querySelectorAll('.line-block').forEach((b, i) => {
+      b.classList.remove('active-line', 'glass2', 'done-line');
+      if (i === state.currentLine) b.classList.add('active-line', 'glass2');
+      else if (i < state.currentLine) b.classList.add('done-line');
+    });
+    updatePlayProgress();
+    document.getElementById('interim-display').textContent = '— tap mic to start listening —';
+    document.getElementById(`line-block-${state.currentLine}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function skipLine() {
+  const lv = state.levels[state.currentLevel];
+  const line = lv.lines[state.currentLine];
+  const targetWords = line.split(/\s+/).filter(Boolean);
+  targetWords.forEach((_, wi) => {
+    const span = document.getElementById(`word-${state.currentLine}-${wi}`);
+    if (span) { span.classList.remove('matched', 'interim'); span.classList.add('missed'); }
+  });
+  state.lineScores.push(0);
+  state.matchedWords[state.currentLine] = new Array(targetWords.length).fill(false);
+  state.currentLine++;
+  const lv2 = state.levels[state.currentLevel];
+  if (state.currentLine >= lv2.lines.length) finishLevel();
+  else {
+    if (!state.matchedWords[state.currentLine]) {
+      const nw = lv2.lines[state.currentLine].split(/\s+/).filter(Boolean);
+      state.matchedWords[state.currentLine] = new Array(nw.length).fill(false);
+    }
+    document.querySelectorAll('.line-block').forEach((b, i) => {
+      b.classList.remove('active-line', 'glass2', 'done-line');
+      if (i === state.currentLine) b.classList.add('active-line', 'glass2');
+      else if (i < state.currentLine) b.classList.add('done-line');
+    });
+    updatePlayProgress();
+    document.getElementById('interim-display').textContent = '— tap mic to start listening —';
+    stopRecognition();
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  FINISH LEVEL → RESULTS
+// ═══════════════════════════════════════════════
+function finishLevel() {
+  stopRecognition();
+  const lv = state.levels[state.currentLevel];
+  const avgScore = state.lineScores.reduce((a,b)=>a+b,0) / state.lineScores.length;
+  let stars = 0;
+  if (avgScore >= 90) stars = 3;
+  else if (avgScore >= 60) stars = 2;
+  else if (avgScore >= 30) stars = 1;
+
+  lv.status = 'completed';
+  lv.stars = stars;
+  lv.score = avgScore;
+
+  // Unlock next
+  if (state.currentLevel + 1 < state.levels.length) {
+    state.levels[state.currentLevel + 1].status = 'unlocked';
+  }
+
+  // Calculate XP earned this level
+  const xpEarned = state.lineScores.reduce((sum, s) => {
+    if (s >= 80) return sum + 50;
+    if (s >= 40) return sum + 10;
+    return sum;
+  }, 0);
+
+  // Show results
+  const starStr = '⭐'.repeat(stars) + (stars < 3 ? '☆'.repeat(3 - stars) : '');
+  document.getElementById('res-stars').textContent = starStr;
+  document.getElementById('res-level').textContent = `LEVEL ${state.currentLevel + 1}`;
+  const subtitles = ['Keep practicing! 💪', 'Good effort! 👏', 'Great job! 🎉', 'Perfect! 🌟'];
+  document.getElementById('res-subtitle').textContent = subtitles[stars];
+  document.getElementById('res-accuracy').textContent = Math.round(avgScore) + '%';
+  document.getElementById('res-xp-earned').textContent = `+${xpEarned} XP`;
+  document.getElementById('res-lines').textContent = state.lineScores.length;
+  document.getElementById('res-total-xp').textContent = state.xp;
+
+  const nextExists = state.currentLevel + 1 < state.levels.length;
+  document.getElementById('btn-next-level').style.display = nextExists ? '' : 'none';
+
+  state.matchedWords = [];
+  showScreen('screen-results');
+}
+
+// ═══════════════════════════════════════════════
+//  RESULTS BUTTONS
+// ═══════════════════════════════════════════════
+document.getElementById('btn-next-level').addEventListener('click', () => {
+  startLevel(state.currentLevel + 1);
+});
+document.getElementById('btn-back-map').addEventListener('click', () => {
+  renderMap(); showScreen('screen-map');
+});
+document.getElementById('btn-retry').addEventListener('click', () => {
+  startLevel(state.currentLevel);
+});
+document.getElementById('btn-back-to-map').addEventListener('click', () => {
+  stopRecognition(); renderMap(); showScreen('screen-map');
+});
+
+// ═══════════════════════════════════════════════
+//  XP DISPLAYS
+// ═══════════════════════════════════════════════
+function updateXpDisplays() {
+  document.getElementById('xp-display').textContent = state.xp + ' XP';
+  const playXp = document.getElementById('play-xp-display');
+  if (playXp) playXp.textContent = state.xp + ' XP';
+}
+</script>
+</body>
+</html>
